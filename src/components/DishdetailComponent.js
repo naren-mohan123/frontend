@@ -6,6 +6,7 @@ import { LocalForm,Control,Errors } from "react-redux-form";
 import { Loading } from "./LoadingComponent";
 import { baseUrl } from '../shared/baseUrl';
 import { FadeTransform, Fade, Stagger } from "react-animation-components";
+import { checkPropTypes } from "prop-types";
 
 const required = (val) => (val) && (val.length);
 const maxLength = (len) => (val)=> !(val) || (val.length <= len);
@@ -29,7 +30,7 @@ class CommentForm extends Component{
 
     handleSubmit(values){
         this.toggleModal();
-        this.props.postComment(this.props.dishId,values.rating,values.author,values.comment);
+        this.props.postComment(this.props.dishId,values.rating,values.comment);
     }
 
     render(){
@@ -56,26 +57,6 @@ class CommentForm extends Component{
                                 </Control.select>
                         </div>
                         <div className="form-group">
-                                <label htmlFor = "yourname">Your Name</label>
-                                <Control.text model = ".yourname" name="yourname" id="yourname"
-                                              placeholder = "Your Name" 
-                                              className = "form-control"
-                                              validators ={{
-                                                  required , minLength : minLength(3) , maxLength : maxLength(15)
-                                              }}
-                                />
-                                <Errors className ="text-danger"
-                                        model = ".yourname"
-                                        show = "touched"
-                                        messages = {{
-                                                required : "Required",
-                                                minLength : "Must be greater than 2 character",
-                                                maxLength : "Must be less than 15 character"
-                                            }}
-                                />
-
-                        </div>
-                        <div className="form-group">
                                 <label htmlFor = "comment">Comment</label>
                                 <Control.textarea model = ".comment" name="comment" id="comment"
                                                   rows="6"
@@ -100,13 +81,7 @@ class CommentForm extends Component{
 
 }
 
-
-
-
-
-
-
-    function RenderDish({dish}){
+    function RenderDish({dish,dishId, favorite, postFavorite}){
         if(dish!=null){
             return(
                 <FadeTransform in 
@@ -115,6 +90,15 @@ class CommentForm extends Component{
                 }}>
                 <Card>
                 <CardImg top src={baseUrl + dish.image} alt={dish.name} />
+                <CardImgOverlay>
+                    <Button outline color="primary" onClick={() => favorite ? console.log('Already favorite') : postFavorite(dish._id)} >
+                        {favorite ?
+                            <span className="fa fa-heart"></span>
+                            : 
+                            <span className="fa fa-heart-o"></span>
+                        }
+                    </Button>
+                </CardImgOverlay>
                 <CardBody>
                   <CardTitle>{dish.name}</CardTitle>
                   <CardText>{dish.description}</CardText>
@@ -138,15 +122,16 @@ class CommentForm extends Component{
                     <h4>Comments</h4>
                     <ul className="list-unstyled">
                         <Stagger in>
-                        {comments.map((comments)=> {
+                        {comments.map((comment)=> {
                             return(
                                 <Fade in >
-                                <li key={comments.id}>
+                                <li key={comment._id}>
                                     <div>
-                                        <p>{comments.comment}</p>
-                                        <p>--{comments.author}, 
-                                         {new Intl.DateTimeFormat('en-US', 
-                                        { year: 'numeric', month: 'short', day: '2-digit'}).format(new Date(Date.parse(comments.date)))}</p>
+                                        <p>{comment.comment}</p>
+                                        <p>{comment.rating} stars</p>
+                                        <p>--{comment.author.firstname} {comment.author.lastname}, 
+                                        {new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'short', day:'2-digit'}).format(new Date(Date.parse(comment.updatedAt)))}
+                                        </p>
                                 </div>
                                 </li>
                                 </Fade>
@@ -204,12 +189,12 @@ class CommentForm extends Component{
                 </div>
                 <div className="row">
                     <div className="col-12 col-md-5 m-1">
-                        <RenderDish dish={props.dish} />
+                        <RenderDish dish={props.dish} favorite={props.favorite} postFavorite={props.postFavorite} />
                     </div>
                     <div className="col-12 col-md-5 m-1">
                         <RenderComments comments={props.comments} 
                                         postComment = {props.postComment}
-                                        dishId = {props.dish.id} 
+                                        dishId = {props.dish._id} 
                         />
                     </div>
                 </div>
